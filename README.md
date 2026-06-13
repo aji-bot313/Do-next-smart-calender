@@ -1,4 +1,4 @@
-# Do-next-smart-calender
+# Do-Next Smart Calender
 Alpro Project The Smart Calender
 
 
