@@ -1,0 +1,148 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+void completeTask() {
+    // Step 1: Read all existing tasks into a vector
+    vector<string> tasks;
+    ifstream inFile("mini_tasks.db");
+    string line;
+    
+    if (!inFile.is_open()) {
+        cout << "No database found. Nothing to complete!\n";
+        return;
+    }
+
+    while (getline(inFile, line)) {
+        tasks.push_back(line);
+    }
+    inFile.close(); // Close it as soon as we are done reading
+
+    // If the file was empty, stop here
+    if (tasks.empty()) {
+        cout << "Your task list is already empty!\n";
+        return;
+    }
+
+    // Step 2: Ask the user which task they finished
+    int taskNumber;
+    cout << "\nEnter the number of the task you completed: ";
+    cin >> taskNumber;
+    
+    // IMPORTANT: When switching from 'cin >>' to 'getline()', 
+    // we have to clear the "Enter" key press out of the system memory!
+    cin.ignore(); 
+
+    // Validate the input so the program doesn't crash
+    if (taskNumber < 1 || taskNumber > tasks.size()) {
+        cout << "Invalid task number.\n";
+        return;
+    }
+
+    // Vectors start counting at 0, so Task 1 is actually at index 0.
+    int vectorIndex = taskNumber - 1;
+    cout << "[+] Great job! Erasing task: " << tasks[vectorIndex] << "\n";
+    
+    // Erase that specific item from the vector
+    tasks.erase(tasks.begin() + vectorIndex);
+
+    // Step 3: Overwrite the file
+    // Notice we do NOT use ios::app here. We want a fresh, blank file!
+    ofstream outFile("mini_tasks.db"); 
+    
+    for (const string& t : tasks) {
+        outFile << t << "\n";
+    }
+    outFile.close();
+}
+
+// 1. Function to add data to our file
+void addTask() {
+    // Open the file in "append" mode so we don't erase older tasks
+    ofstream file("mini_tasks.db", ios::app);
+    
+    if (file.is_open()) {
+        string task;
+        cout << "\nType your new task: ";
+        getline(cin, task); // Listen to the keyboard
+        
+        file << task << "\n"; // Write it to the .db file
+        cout << "[+] Task saved to database!\n";
+        
+        file.close(); // Always close your files when done!
+    } else {
+        cout << "Error opening file.\n";
+    }
+}
+
+// 2. Function to read data from our file
+void viewTasks() {
+    // Open the file for reading
+    ifstream file("mini_tasks.db");
+    string line;
+    
+    cout << "\n--- YOUR SAVED TASKS ---\n";
+    
+    if (!file.is_open()) {
+        cout << "No database found. Try adding a task first!\n";
+        return;
+    }
+
+    int taskNumber = 1;
+    // Read the file line by line until there are no lines left
+    while (getline(file, line)) {
+        cout << taskNumber << ". " << line << "\n";
+        taskNumber++;
+    }
+    
+    file.close();
+}
+
+// 3. The Main TUI Menu
+int main() {
+    string choice;
+    
+    // The "while (true)" loop is what keeps the CLI running!
+    // Without this, the program would print the menu and immediately close.
+    while (true) {
+        system("clear||cls");
+        cout << "\n====================\n";
+        cout << "   MINI TRACKER     \n";
+        cout << "====================\n";
+        cout << "1. Add a Task\n";
+        cout << "2. View All Tasks\n";
+        cout << "3. Complete Tasks\n";
+        cout << "0. Exit Program\n";
+        cout << "Choose an option: ";
+        
+        getline(cin, choice);
+
+        // Routing the user's choice to the correct function
+        if (choice == "1") {
+            addTask();
+            system("clear||cls");
+        } 
+        else if (choice == "2") {
+            viewTasks();
+            system("pause");
+            system("clear||cls");
+        }
+        else if (choice == "3") {
+            completeTask();
+            system("pause");
+            system("clear||cls");
+        }
+        else if (choice == "0") {
+            cout << "Goodbye!\n";
+            break; // This breaks the infinite loop and ends the program
+        } 
+        else {
+            cout << "Invalid choice, please type 1, 2, 3, or 0.\n";
+        }
+    }
+
+    return 0;
+}
