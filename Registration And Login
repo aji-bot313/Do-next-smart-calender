@@ -1,0 +1,220 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstring>
+#include <limits>
+#include <ctime>
+#include <string>
+#include <iomanip> // Essential for formatting tables and setw()
+
+using namespace std;
+
+#define MAX_USERNAME 50
+#define MAX_PASSWORD 50
+
+string currentUser = "";
+
+string getUserFileName(); // Return file name
+void showAdminMenu();
+void registration();
+void login();
+bool usernameExists(const char username[]);
+void saveUser(const char username[], const char password[]);
+bool verifyUser(const char username[], const char password[]);
+void clearInputBuffer();
+void clearScreen();
+void pauseScreen();
+
+// MAIN AUTHENTICATION MENU
+void showAdminMenu() {
+    int choice = true;
+    while (true) {
+        cout << "===============================" << endl;
+        cout << "    LOGIN & REGISTRATION SYSTEM   " << endl;
+        cout << "===============================" << endl;
+        cout << "1. Register" << endl;
+        cout << "2. Login" << endl;
+        cout << "0. Exit" << endl;
+        cout << "Choose menu: ";
+
+        if (!(cin >> choice)) {
+            cout << "[Failed] Input must be a number!" << endl;
+            cin.clear();
+            cin.ignore(1000, '\n');
+            continue;
+        }
+
+        if (choice == 1) registration();
+        else if (choice == 2) login();
+        else if (choice == 0) {
+            cout << "Thank you for using the system!" << endl;
+            break;
+        }
+        else cout << "[Failed] Invalid menu! Choose between 0 and 2." << endl;
+    }
+}
+
+string getUserFileName(){
+    return "users.txt";
+}
+
+// REGISTRATION FUNCTION
+void registration() {
+    char username[MAX_USERNAME];
+    char password[MAX_PASSWORD];
+    char confirmPassword[MAX_PASSWORD];
+    
+    cout << "\n--- USER REGISTRATION ---" << endl;
+    
+    // Get username
+    cout << "Username: ";
+    cin.ignore();
+    cin.getline(username, MAX_USERNAME);
+    
+    // Validate username (not empty)
+    if (strlen(username) == 0) {
+        cout << "[Error] Username cannot be empty!" << endl;
+        return;
+    }
+    
+    // Check for duplicate username
+    if (usernameExists(username)) {
+        cout << "[Error] Username already exists! Please choose another one." << endl;
+        return;
+    }
+    
+    // Get password
+    cout << "Password: ";
+    cin.getline(password, MAX_PASSWORD);
+    
+    // Validate password (not empty)
+    if (strlen(password) == 0) {
+        cout << "[Error] Password cannot be empty!" << endl;
+        return;
+    }
+    
+    // Confirm password
+    cout << "Confirm Password: ";
+    cin.getline(confirmPassword, MAX_PASSWORD);
+    
+    // Check if passwords match
+    if (strcmp(password, confirmPassword) != 0) {
+        cout << "[Error] Passwords do not match!" << endl;
+        return;
+    }
+    
+    // Save user credentials
+    saveUser(username, password);
+    cout << "[Success] Registration successful! You can now login." << endl;
+}
+
+// LOGIN FUNCTION
+void login() {
+    char username[MAX_USERNAME];
+    char password[MAX_PASSWORD];
+    int attempts = 0;
+
+    cout << "\n--- USER LOGIN ---" << endl;
+
+    while (attempts < 3) {
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        cout << "Username: ";
+        cin.getline(username, MAX_USERNAME);
+
+        cout << "Password: ";
+        cin.getline(password, MAX_PASSWORD);
+
+        if (verifyUser(username, password)) {
+        currentUser = username;
+        cout << "\n[Success] Login successful! Welcome, "<< username << "!\n";
+        return;
+        }
+        attempts++;
+        cout << "[Error] Invalid username or password!" << endl;
+    }
+
+    cout << "[Error] Too many failed attempts.\n";
+}
+// CHECK IF USERNAME EXISTS IN DATABASE
+bool usernameExists(const char username[]) {
+    std::ifstream file(getUserFileName());
+    if (!file.is_open()) {
+        return false; // File doesn't exist yet
+    }
+    
+    char storedUsername[MAX_USERNAME];
+    char storedPassword[MAX_PASSWORD];
+    
+    while (file.getline(storedUsername, MAX_USERNAME, ':')) {
+        file.getline(storedPassword, MAX_PASSWORD);
+        
+        if (strcmp(storedUsername, username) == 0) {
+            file.close();
+            return true;
+        }
+    }
+    
+    file.close();
+    return false;
+}
+
+// SAVE USER CREDENTIALS TO FILE
+void saveUser(const char username[], const char password[]) {
+    std::ofstream file("users.txt", std::ios::app);
+    
+    if (!file.is_open()) {
+        cout << "[Error] Could not open user database!" << endl;
+        return;
+    }
+    
+    // Store in format: username:password
+    file << username << ":" << password << endl;
+    file.close();
+}
+
+// VERIFY USER CREDENTIALS
+bool verifyUser(const char username[], const char password[]) {
+    std::ifstream file("users.txt");
+    if (!file.is_open()) {
+        cout << "[Error] No users registered yet!" << endl;
+        return false;
+    }
+    
+    char storedUsername[MAX_USERNAME];
+    char storedPassword[MAX_PASSWORD];
+    
+    while (file.getline(storedUsername, MAX_USERNAME, ':')) {
+        file.getline(storedPassword, MAX_PASSWORD);
+        
+        if (strcmp(storedUsername, username) == 0 && 
+            strcmp(storedPassword, password) == 0) {
+            file.close();
+            return true;
+        }
+    }
+    
+    file.close();
+    return false;
+}
+
+// CLEAR INPUT BUFFER
+void clearInputBuffer() {
+    cin.clear();
+    cin.ignore(1000, '\n');
+}
+
+// UTILITY & CORE HELPER FUNCTIONS
+void clearScreen() {
+    cout << "\033[2J\033[H";
+}
+
+void ifEmpty() {
+    cout << "\n[Error] Input cannot be empty!\n";
+    cout << "Press Enter to try again...";
+    cin.get(); 
+}
+int main() {
+    showAdminMenu();
+    return 0;
+}
