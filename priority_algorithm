@@ -1,0 +1,133 @@
+#include <iostream>
+#include <string>
+#include <iomanip> // Essential for formatting tables and setw()
+
+using namespace std;
+
+const int MAX_TASKS = 100;
+const int TERMINAL_WIDTH = 75; 
+
+struct Task {
+    int id;
+    string title;
+    int importance;           // 1 = High, 2 = Medium, 3 = Low
+    bool completed;
+};
+
+// Global Array & State Trackers
+Task taskList[MAX_TASKS];
+int taskCount = 0;
+int nextTaskId = 1;
+
+void sortTasksByUrgency() {
+    // Bubble Sort with multi-layered sorting rules 
+    for (int i = 0; i < taskCount - 1; i++) {
+        for (int j = 0; j < taskCount - i - 1; j++) {
+            bool swapNeeded = false;
+            
+            // check status completion (status of pending appear before status of completed)
+            if (taskList[j].completed && !taskList[j + 1].completed) {
+                swapNeeded = true; // swap so "pending" goes up
+            } 
+            else if (!taskList[j].completed && taskList[j + 1].completed) {
+                swapNeeded = false; // right condition, pending is already above completed
+            } 
+            else {
+                // if the status are the same (both pending or both completed)
+                if (taskList[j].importance > taskList[j + 1].importance) {
+                    swapNeeded = true; // swap, the most important goes up
+                }
+            }
+            
+            // swap objects if the condition is fulfilled
+            if (swapNeeded) {
+                Task temp = taskList[j];
+                taskList[j] = taskList[j + 1];
+                taskList[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void addTask() {
+    if (taskCount >= MAX_TASKS) {
+        cout << "\n[Error] Planner database registry allocation full!\n";
+        return;
+    }
+
+    Task newTask;
+    
+    cout << "\n--- ADD NEW TASK ---\n";
+    cout << "Enter Task's Title       : ";
+    getline(cin, newTask.title);
+    
+    while (true) {
+        cout << "Set Importance Level (High:1 | Medium:2 | Low:3): ";
+        if (!(cin >> newTask.importance) || newTask.importance < 1 || newTask.importance > 3) {
+            cin.clear(); cin.ignore(10000, '\n');
+            cout << "[Error] Value out of range selector map bounds!\n"; continue;
+        }
+        cin.ignore(10000, '\n');
+        break;
+    }
+
+    newTask.id = nextTaskId++;
+    newTask.completed = false; 
+    
+    taskList[taskCount++] = newTask;
+    cout << "[Success] New task registered securely.\n";
+}
+
+void displayTasks() {
+    sortTasksByUrgency();
+    cout << "\n===========================================================================\n";
+    cout << "ALL TASK ENTRIES (URGENCY RANKED)\n";
+    cout << "===========================================================================\n";
+    
+    if (taskCount == 0) {
+        cout << "\n           [Notice] Your planner is completely clean. No tasks found.\n\n";
+        cout << string(TERMINAL_WIDTH, '=') << "\n";
+        return;
+    }
+
+    cout << left << setw(6)  << "ID" 
+         << setw(35) << "Title" 
+         << setw(15) << "Priority" 
+         << "Status" << endl;
+         
+    cout << string(TERMINAL_WIDTH, '-') << "\n";
+
+    for (int i = 0; i < taskCount; i++) {
+        string priorityStr = (taskList[i].importance == 1 ? "High" : (taskList[i].importance == 2 ? "Medium" : "Low"));
+        string statusStr = taskList[i].completed ? "Completed" : "Pending";
+        string titleSummary = (taskList[i].title.length() > 30) ? taskList[i].title.substr(0, 27) + "..." : taskList[i].title;
+
+        cout << left << setw(6)  << taskList[i].id 
+             << setw(35) << titleSummary 
+             << setw(15) << priorityStr 
+             << statusStr << endl;
+    }
+    cout << string(TERMINAL_WIDTH, '=') << "\n";
+}
+
+void runPriorityApp() {
+    string inputOpsi;
+    while (true) {
+        cout << "\nDONEXT: PRIORITIZATION APP\n";
+        cout << "1. Add New Task\n2. View Sorted Agenda\n3. Terminate Run Context\n\nSelect option (1-3): ";
+        getline(cin, inputOpsi);
+
+        if (inputOpsi.empty() || inputOpsi.length() != 1 || inputOpsi[0] < '1' || inputOpsi[0] > '3') {
+            cout << "\n[Error] Invalid Selection Action Code mapping range pattern!\n";
+            continue;
+        }
+
+        int opt = inputOpsi[0] - '0';
+        if (opt == 3) break;
+
+        switch (opt) {
+            case 1: addTask(); break;
+            case 2: displayTasks(); break;
+        }
+    }
+}
