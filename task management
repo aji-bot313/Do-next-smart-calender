@@ -1,0 +1,230 @@
+#include <iostream>
+#include <string>
+#include <iomanip> // Essential for formatting tables and setw()
+
+using namespace std;
+
+const int MAX_TASKS = 100;
+const int TERMINAL_WIDTH = 75;
+
+struct Task {
+    int id;
+    string title;
+    string description;
+    string category;
+    string dueDateStr;        // Target deadline as raw text input
+    int importance;           // 1 = High, 2 = Medium, 3 = Low
+    bool completed;
+};
+
+// Global Array & State Trackers
+Task taskList[MAX_TASKS];
+int taskCount = 0;
+int nextTaskId = 1;
+
+// UTILITY & CORE HELPER FUNCTIONS
+void clearScreen() {
+    cout << "\033[2J\033[H";
+}
+
+void ifEmpty() {
+    cout << "\n[Error] Input cannot be empty!\n";
+    cout << "Press Enter to try again...";
+    cin.get(); 
+}
+
+void displayHeader(string menuTitle) {
+    clearScreen();
+    cout << string(TERMINAL_WIDTH, '=') << "\n";
+    cout << menuTitle << "\n";
+    cout << string(TERMINAL_WIDTH, '=') << "\n";
+}
+
+int findTaskIndexById(int taskId) {
+    for (int i = 0; i < taskCount; i++) {
+        if (taskList[i].id == taskId) return i;
+    }
+    return -1;
+}
+
+// SYSTEM ACTION CONTROLLERS
+void addTask() {
+    if (taskCount >= MAX_TASKS) {
+        cout << "\n[Error] Planner database registry allocation full!\n";
+        return;
+    }
+
+    Task newTask;
+    
+    // 1. INPUT TITLE
+    while (true) {
+        displayHeader("ADD NEW TASK");
+        cout << "Enter Task's Title       : ";
+        getline(cin, newTask.title);
+        if (newTask.title.empty()) ifEmpty();
+        else break;
+    }
+    
+    // 2. INPUT DESCRIPTION
+    cout << "Enter Task's Description : ";
+    getline(cin, newTask.description);
+
+    // 3. INPUT DEADLINE (Simplified as standard text input)
+    cout << "Enter Deadline (YYYY-MM-DD HH:MM) : ";
+    getline(cin, newTask.dueDateStr);
+
+    // 4. INPUT IMPORTANCE LEVEL
+    while (true) {
+        cout << "Set Importance Level (High:1 | Medium:2 | Low:3): ";
+        if (!(cin >> newTask.importance) || newTask.importance < 1 || newTask.importance > 3) {
+            cin.clear(); cin.ignore(10000, '\n');
+            cout << "[Error] Value out of range selector map bounds!\n"; continue;
+        }
+        cin.ignore(10000, '\n');
+        break;
+    }
+
+    newTask.id = nextTaskId++;
+    newTask.completed = false;
+    newTask.category = "General";
+    
+    taskList[taskCount++] = newTask;
+    cout << "\n[Success] New task registered securely.\n";
+}
+
+void displayTasks() {
+    displayHeader("ALL TASK ENTRIES");
+    
+    if (taskCount == 0) {
+        cout << "\n           [Notice] Your planner is completely clean. No tasks found.\n\n";
+        cout << string(TERMINAL_WIDTH, '=') << "\n";
+        return;
+    }
+
+    cout << left << setw(4)  << "ID" 
+         << setw(20) << "Title" 
+         << setw(20) << "Deadline" 
+         << setw(15) << "Priority" 
+         << "Status" << endl;
+         
+    cout << string(TERMINAL_WIDTH, '-') << "\n";
+
+    for (int i = 0; i < taskCount; i++) {
+        string priorityStr = (taskList[i].importance == 1 ? "High" : (taskList[i].importance == 2 ? "Medium" : "Low"));
+        string statusStr = taskList[i].completed ? "Completed" : "Pending";
+        string titleSummary = (taskList[i].title.length() > 17) ? taskList[i].title.substr(0, 14) + "..." : taskList[i].title;
+
+        cout << left << setw(4)  << taskList[i].id 
+             << setw(20) << titleSummary 
+             << setw(20) << taskList[i].dueDateStr 
+             << setw(15) << priorityStr 
+             << statusStr << endl;
+    }
+    cout << string(TERMINAL_WIDTH, '=') << "\n";
+}
+
+void modifyTask() {
+    displayTasks();
+    if (taskCount == 0) return;
+
+    int idChoice;
+    cout << "\nEnter the Task ID to alter parameters: ";
+    if (!(cin >> idChoice)) { cin.clear(); cin.ignore(10000, '\n'); return; }
+    cin.ignore(10000, '\n');
+
+    int index = findTaskIndexById(idChoice);
+    if (index == -1) { cout << "[Error] ID reference not found.\n"; return; }
+
+    Task *taskPtr = &taskList[index];
+    displayHeader("MODIFY TASK DATA");
+    cout << "Selected: " << taskPtr->title << "\n\n";
+    cout << "1. Toggle Progress State (Complete/Pending)\n";
+    cout << "2. Rewrite Title and Description\n";
+    cout << "3. Edit Deadline (Text format)\n";
+    cout << "4. Change Importance Level\n";
+    cout << "5. Cancel & Go Back\n";
+    cout << "Choice (1-5): ";
+    
+    int subChoice;
+    if (!(cin >> subChoice)) { cin.clear(); cin.ignore(10000, '\n'); return; }
+    cin.ignore(10000, '\n');
+    
+    if (subChoice == 5) {
+        cout << "\n[Notice] Custom modification canceled. Returning to safety loop...\n";
+        return;
+    }
+    else if (subChoice == 1) {
+        taskPtr->completed = !taskPtr->completed;
+        cout << "\n[Success] Status changed.\n";
+    } 
+    else if (subChoice == 2) {
+        cout << "New Title: "; getline(cin, taskPtr->title);
+        cout << "New Desc : "; getline(cin, taskPtr->description);
+        cout << "\n[Success] Content rewritten.\n";
+    } 
+    else if (subChoice == 4) {
+        while (true) {
+            cout << "Set New Importance Level (High:1 | Medium:2 | Low:3): ";
+            if (!(cin >> taskPtr->importance) || taskPtr->importance < 1 || taskPtr->importance > 3) {
+                cin.clear(); cin.ignore(10000, '\n');
+                cout << "[Error] Value out of range selector map bounds!\n"; continue;
+            }
+            cin.ignore(10000, '\n');
+            break;
+        }
+        cout << "\n[Success] Importance level adjusted successfully.\n";
+    }
+    else if (subChoice == 3) {
+        cout << "Enter New Deadline (YYYY-MM-DD HH:MM): ";
+        getline(cin, taskPtr->dueDateStr);
+        cout << "\n[Success] Deadline updated successfully!\n";
+    }
+    else {
+        cout << "[Error] Invalid sub-option choice.\n";
+    }
+}
+
+void deleteTask() {
+    displayTasks();
+    if (taskCount == 0) return;
+
+    int idChoice;
+    cout << "\nEnter Target Erasure Task ID: ";
+    if (!(cin >> idChoice)) { cin.clear(); cin.ignore(10000, '\n'); return; }
+    cin.ignore(10000, '\n');
+
+    int index = findTaskIndexById(idChoice);
+    if (index == -1) { cout << "[Error] Reference not identified.\n"; return; }
+
+    for (int i = index; i < taskCount - 1; i++) {
+        taskList[i] = taskList[i + 1];
+    }
+    taskCount--;
+    cout << "[Success] Element deleted successfully.\n";
+}
+
+void appMenu() {
+    string inputOpsi;
+    while (true) {
+        displayHeader("DONEXT: MAIN MENU");
+        cout << "1. Add New Task\n2. View Sorted Agenda\n3. Modify Existing Properties\n4. Remove Records\n5. Terminate Run Context\n\nSelect option (1-5): ";
+        getline(cin, inputOpsi);
+
+        if (inputOpsi.empty() || inputOpsi.length() != 1 || inputOpsi[0] < '1' || inputOpsi[0] > '5') {
+            cout << "\n[Error] Invalid Selection Action Code mapping range pattern!\nPress Enter to reload menu context...";
+            cin.get(); continue;
+        }
+
+        int opt = inputOpsi[0] - '0';
+        if (opt == 5) break;
+
+        switch (opt) {
+            case 1: addTask(); break;
+            case 2: displayTasks(); break;
+            case 3: modifyTask(); break;
+            case 4: deleteTask(); break;
+        }
+        cout << "\nPress Enter to return to Main Menu...";
+        cin.get();
+    }
+}
