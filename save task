@@ -1,0 +1,62 @@
+void saveTasks() {
+    ofstream file(getTaskFileName());
+    if (!file.is_open()) {
+        cout << RED << "[Error] Cannot save tasks!\n" << RESET;
+        return;
+    }
+
+    file << nextTaskId << endl;
+    file << taskCount << endl;
+
+    for (int i = 0; i < taskCount; i++) {
+        file << taskList[i].id << "|"
+             << taskList[i].title << "|"
+             << taskList[i].description << "|"
+             << taskList[i].category << "|"
+             << taskList[i].deadlineTimestamp << "|"
+             << taskList[i].dueDateStr << "|"
+             << taskList[i].importance << "|"
+             << taskList[i].completed
+             << endl;
+    }
+    file.close();
+}
+
+void loadTasks() {
+    ifstream file(getTaskFileName());
+    if (!file.is_open()) {
+        taskCount = 0;
+        nextTaskId = 1;
+        return;
+    }
+
+    file >> nextTaskId;
+    file >> taskCount;
+    file.ignore();
+
+    string line;
+    for (int i = 0; i < taskCount; i++) {
+        getline(file, line);
+        stringstream ss(line);
+        string temp;
+
+        getline(ss, temp, '|');
+        taskList[i].id = stoi(temp);
+
+        getline(ss, taskList[i].title, '|');
+        getline(ss, taskList[i].description, '|');
+        getline(ss, taskList[i].category, '|');
+
+        getline(ss, temp, '|');
+        taskList[i].deadlineTimestamp = stoll(temp);
+
+        getline(ss, taskList[i].dueDateStr, '|');
+
+        getline(ss, temp, '|');
+        taskList[i].importance = stoi(temp);
+
+        getline(ss, temp, '|');
+        taskList[i].completed = stoi(temp);
+    }
+    file.close();
+}
