@@ -1,0 +1,201 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstring>
+#include <limits>
+#include <ctime>
+#include <string>
+#include <iomanip>
+
+using namespace std;
+
+bool titleMatches(const string& title, const string& keyword){
+    string copytitle = title;
+    string copykeyword = keyword;
+    for (char &c : copytitle){
+        c = tolower(static_cast<unsigned char>(c));
+    }
+    for (char &c : copykeyword){
+        c = tolower (static_cast<unsigned char>(c));
+    }
+
+    size_t posisi = copytitle.find(copykeyword);
+    return posisi != string::npos;
+}
+
+bool categoryMatches(const string& category, const string& categoryName){
+    string copycat = category;
+    string copykey = categoryName;
+
+    for (char &c : copycat) c = tolower(static_cast<unsigned char>(c));
+    for (char &c : copykey) c = tolower(static_cast<unsigned char>(c));
+
+    return copycat.find(copykey) != string::npos;
+}
+
+void searchByTitle(){
+    string keyword;
+    int foundcount = 0;
+    cout << "=======================================" << endl;
+    cout << "Search by Title..." << endl;
+    cout << "Enter keyword: ";
+    getline(cin, keyword);
+    cout << "=======================================" << endl;
+
+    for (int i = 0; i < taskCount; i++){
+        if (titleMatches(taskList[i].title, keyword)){
+            cout << "ID      : " << taskList[i].id << endl;
+            cout << "Title   : " << taskList[i].title << endl;
+            cout << "Deadline: " << taskList[i].dueDateStr << endl;
+            cout << "---------------------------------------" << endl;
+
+            foundcount++;
+        }
+    }
+    if (foundcount == 0){
+        cout << "Search not found..." << endl;
+    } else {
+        cout << "Found " << foundcount << " task(s)." << endl;
+        cout << "=======================================" << endl;
+    }
+    cout << "\nTekan ENTER untuk kembali ke menu...";
+    system("pause");
+}
+
+void filterByCategory(){
+    int foundcount = 0;
+    string categoryt;
+    cout << "=======================================" << endl;
+    cout << "Search Category Priotity (High/Medium/Low): " << endl;
+    cout << "Enter Category: ";
+    getline(cin, categoryt);
+    cout << "=======================================" << endl;
+
+    for (char &c : categoryt) c = tolower(static_cast<unsigned char>(c));
+    for (int i = 0; i < taskCount; i++){
+        string pStr = (taskList[i].importance == 1 ? "high" : (taskList[i].importance == 2 ? "medium" : "low"));
+        string pNum = to_string(taskList[i].importance); // "1", "2", atau "3"
+
+        if (pStr.find(categoryt) != string::npos || pNum == categoryt){
+            string priorityDisplay = (taskList[i].importance == 1 ? "High" : (taskList[i].importance == 2 ? "Medium" : "Low"));
+            cout << "ID      : " << taskList[i].id << endl;
+            cout << "Title   : " << taskList[i].title << endl;
+            cout << "Priority: " << priorityDisplay << endl;
+            cout << "---------------------------------------" << endl;
+        foundcount++;
+        }
+    }
+
+    if (foundcount == 0){
+        cout << "Category not found..." << endl;
+    } else {
+        cout << "Found " << foundcount << " task(s) in this category." << endl;
+    }
+    cout << "=======================================" << endl;
+    cout << "\nTekan ENTER untuk kembali ke menu...";
+    system("pause");
+}
+
+void filterByStatus(){
+    int statuschoice;
+    cout << "=======================================" << endl;
+    cout << "  Filter by Status: " << endl;
+    cout << "  1. Pending" << endl;
+    cout << "  2. Completed" << endl;
+    cout << "=======================================" << endl;
+    cout << "Choose option (1/2): ";
+
+    while (!(cin >> statuschoice) || (statuschoice < 1 || statuschoice > 2)) {
+        cout << "[Failed] Invalid choice! Input 1 or 2: ";
+        cin.clear();
+        cin.ignore(1000, '\n');
+    }
+    cin.ignore(1000, '\n');
+
+    bool targetstatus;
+    if (statuschoice == 2){
+        targetstatus = true;
+    } else {
+        targetstatus = false;
+    }
+
+    int foundcount = 0;
+    cout << "=======================================" << endl;
+
+    for (int i = 0; i < taskCount; i++){
+        if (taskList[i].completed == targetstatus){
+            cout << "ID      : " << taskList[i].id << endl;
+            cout << "Title   : " << taskList[i].title << endl;
+            cout << "Status  : " << (taskList[i].completed ? "Completed: " : "Pending") << endl;
+            cout << "=======================================" << endl;
+            foundcount++;
+        }
+    }
+    if (foundcount == 0){
+        cout << "No tasks found with this status..." << endl;
+    } else {
+        cout << "Found " << foundcount << " task(s)." << endl;
+    }
+    cout << "=======================================" << endl;
+    cout << "\nTekan ENTER untuk kembali ke menu...";
+    system("pause");
+}
+
+void searchTask(){
+    int find;
+    while (true){
+    cout << "=======================================" << endl;
+    cout << "              FIND TASK                " << endl;
+    cout << "=======================================" << endl;
+    cout << "1. Search by Title" << endl;
+    cout << "0. Return" << endl;
+    cout << "Choose Menu: ";
+
+    if (!(cin >> find)) {
+            cout << "[Failed] Input must be a number!" << endl;
+            cin.clear();
+            cin.ignore(1000, '\n');
+            continue;
+        }
+        cin.ignore(1000, '\n');
+
+        if (find == 1) searchByTitle();
+        else if (find == 0) {
+            cout << "Thank you for using the system!" << endl;
+            break;
+        }
+        else cout << "[Failed] Invalid menu! Choose between 0 and 2." << endl;
+    }
+}
+
+void filterTasks(){
+    int choosefilter;
+    while (true){
+    cout << "=======================================" << endl;
+    cout << "                 Filter                " << endl;
+    cout << "=======================================" << endl;
+    cout << "1. By Category" << endl;
+    cout << "2. By Status" << endl;
+    cout << "0. Return" << endl;
+    if (!(cin >> choosefilter)) {
+            cout << "[Failed] Input must be a number!" << endl;
+            cin.clear();
+            cin.ignore(1000, '\n');
+            continue;
+        }
+
+        cin.ignore(1000, '\n');
+
+        if (choosefilter == 1){
+            filterByCategory();
+        }
+        else if (choosefilter == 2){
+            filterByStatus();
+        }
+        else if (choosefilter == 0) {
+            cout << "Thank you for using the system!" << endl;
+            break;
+        }
+        else cout << "[Failed] Invalid menu! Choose between 0 and 2." << endl;
+    }
+}
