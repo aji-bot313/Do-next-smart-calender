@@ -191,8 +191,8 @@ donext.exe
 
 | Name | Role |
 | --- | --- |
-| **[Your Name]** | Lead Developer & Architect |
-| *[Add team members here if applicable]* | *[Role]* |
+| AIJIAZI HOUSAIYIN | GROUP LEADER & Developer |
+| BAYU KHULDUN ARDIANSYAH | Developer |
 
 ## 📄 License
 
