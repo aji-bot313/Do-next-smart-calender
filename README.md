@@ -193,6 +193,11 @@ donext.exe
 | --- | --- |
 | AIJIAZI HOUSAIYIN | GROUP LEADER & Developer |
 | BAYU KHULDUN ARDIANSYAH | Developer |
+| MUHAMMAD FEBRYAN SYACH FAHLEVI | Developer |
+| JOVANKA KIARA REVALIN SEPTYAVANYA | Developer |
+| AZZAHRA SHAFIRA RACHMAN | Developer |
+| RIFKA SALSABILA FUTRI | Developer |
+| I GUSTI AGUNG AYU PRISILIA | Developer |
 
 ## 📄 License
 
