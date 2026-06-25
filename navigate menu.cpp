@@ -1,0 +1,122 @@
+#include <iostream>
+#include <fstream> 
+#include <ctime>
+#include <string>
+#include <cstring>
+#include <iomanip> 
+#include <conio.h> 
+
+using namespace std;
+
+const int MAX_USERNAME = 50;
+const int MAX_PASSWORD = 50;
+const int MAX_TASKS = 100;
+const int TERMINAL_WIDTH = 75; 
+
+// ANSI Escape Codes for Colors
+#define RESET "\033[0m"
+#define GREEN "\033[1;92m"
+#define YELLOW "\033[38;2;227;180;34m"
+#define RED "\033[1;91m"
+#define CYAN "\033[1;96m"
+#define GRAY "\033[0;90m"
+#define WHITE "\033[1;97m"
+#define MAGENTA "\033[1;95m"
+#define BLUE "\033[1;94m"
+
+struct Task {
+    int id;
+    string title;
+    string description;
+    string category;
+    time_t deadlineTimestamp; 
+    string dueDateStr;        
+    int importance;           
+    bool completed;
+};
+
+// Global Variables
+string currentUser = "";
+Task taskList[MAX_TASKS];  
+int taskCount = 0;
+int nextTaskId = 1;
+
+// Function Prototypes
+string getUserFileName(); 
+void showAdminMenu();
+void registration();
+void login();
+bool usernameExists(const char username[]);
+void saveUser(const char username[], const char password[]);
+bool verifyUser(const char username[], const char password[]);
+void clearInputBuffer();
+void clearScreen();
+void pauseScreen();
+void ifEmpty();
+
+void addTask();
+void modifyTask();
+void deleteTask();
+void displayTasks();
+int findTaskIndexById(int taskId);
+void saveTasks();
+void loadTasks();
+void appMenu();
+string getTaskFileName();
+
+void showToast();
+void displayHeader(string menuTitle);
+string calculateTimeLeft(time_t deadline);
+void sortTasksByUrgency();
+
+bool titleMatches(const string& title, const string& keyword);
+void searchByTitle();
+void filterByCategory();
+void filterByStatus();
+void searchTask();
+void filterTasks();
+
+// Generic Interactive Menu Arrow-Key Navigator Helper
+int navigateMenu(string title, const string options[], int count) {
+    int selected = 0;
+    while (true) {
+        displayHeader(title);
+        
+        for (int i = 0; i < count; i++) {
+            string optText;
+            if (i == selected) {
+                optText = ">> " + options[i] + " <<";
+            } else {
+                optText = options[i];
+            }
+            
+            int padding = (TERMINAL_WIDTH - optText.length()) / 2;
+            if (padding < 0) padding = 0;
+            
+            cout << string(padding, ' ');
+            if (i == selected) {
+                cout << BLUE << optText << RESET << "\n"; 
+            } else {
+                cout << optText << "\n";
+            }
+        }
+        cout << string(TERMINAL_WIDTH, '=') << "\n";
+        
+        string hint = "(Use UP/DOWN arrows to navigate, ENTER to select)";
+        int hintPadding = (TERMINAL_WIDTH - hint.length()) / 2;
+        if (hintPadding < 0) hintPadding = 0;
+        cout << string(hintPadding, ' ') << hint << "\n";
+
+        int ch = _getch();
+        if (ch == 0 || ch == 224) { // Handle arrow key sequences
+            ch = _getch();
+            if (ch == 72) { // Up Arrow
+                selected = (selected - 1 + count) % count;
+            } else if (ch == 80) { // Down Arrow
+                selected = (selected + 1) % count;
+            }
+        } else if (ch == 13) { // Enter Key
+            return selected;
+        }
+    }
+}
