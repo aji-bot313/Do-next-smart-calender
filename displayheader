@@ -1,0 +1,56 @@
+void displayHeader(string menuTitle) {
+    clearScreen();
+    time_t now = time(0);
+
+    cout << RED"                ____  ____              "<<GREEN"_   _________  ________\n";
+    cout << RED"               / __ \\/ __ \\            "<<GREEN"/ | / / ____/ |/ /_  __/\n";
+    cout << RED"              / / / / / / /  "<<YELLOW"______   "<<GREEN"/  |/ / __/  |   / / /\n";
+    cout << RED"             / /_/ / /_/ /  "<<YELLOW"/_____/  "<<GREEN"/ /|  / /___ /   | / /\n";
+    cout << RED"            /_____/\\____/           "<<GREEN"/_/ |_/_____//_/|_|/_/\n";
+    cout << RESET << endl ;
+
+    if (!currentUser.empty()) {
+        bool bannerPrinted = false;
+        for (int i = 0; i < taskCount; i++) {
+            if (!taskList[i].completed) {
+                double diffSeconds = difftime(taskList[i].deadlineTimestamp, now);
+                if (diffSeconds > 0 && diffSeconds < (12 * 3600)) {
+                    long long totalMin = diffSeconds / 60;
+                    long long hours = totalMin / 60;
+                    long long mins = totalMin % 60;
+                    
+                    cout << RED << "[URGENT] \"" << taskList[i].title << "\" DUE IN ";
+                    if (hours > 0) cout << hours << " hours " << mins << " minutes";
+                    else cout << mins << " minutes";
+                    cout << RESET << "\n";
+                    bannerPrinted = true;
+                }
+            }
+        }
+    }
+    
+    tm *ltm = localtime(&now);
+    char dateBuf[20];
+    strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", ltm);
+    string dateStr = "Today: " + string(dateBuf);
+    
+    int spacesNeeded = TERMINAL_WIDTH - menuTitle.length() - dateStr.length();
+    if (spacesNeeded < 1) spacesNeeded = 1;
+    
+    cout << string(TERMINAL_WIDTH, '=') << RESET << "\n";
+    cout << menuTitle << string(spacesNeeded, ' ') << dateStr << RESET << "\n";
+    cout << string(TERMINAL_WIDTH, '=') << RESET << "\n";
+
+    // Place the context hint right below the line at the top-right corner
+    if (menuTitle.find("ADD") != string::npos || 
+        menuTitle.find("EDIT") != string::npos || 
+        menuTitle.find("SEARCH") != string::npos) {
+        
+        string exitHint = RED "[Type 'exit' to cancel]" RESET;
+        // 21 represents the true raw length of "[Type 'exit' to cancel]" excluding color escape characters
+        int hintSpaces = TERMINAL_WIDTH - 21; 
+        if (hintSpaces < 0) hintSpaces = 0;
+        
+        cout << string(hintSpaces, ' ') << exitHint << "\n";
+    }
+}
